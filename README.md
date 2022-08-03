@@ -1,4 +1,4 @@
-!(Image of laser cut cardboard hand a shape in sign language ardboard is layered in the y axis)[a_hand.JPEG]
+![Image of laser cut cardboard hand a shape in sign language ardboard is layered in the y axis](a_hand.JPEG)
 
 # Slicer
  OpenSCAD stl to svg slicer for laser cut geometries
