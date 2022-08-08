@@ -22,6 +22,5 @@ filters> quality measures and computations > compute geometric measures
 
 
 # To Do
-* Make slicing take in a vector x y z 
 * Command line interface
 * Meshlab automation
