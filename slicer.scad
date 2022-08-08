@@ -1,43 +1,35 @@
-// stl render and place
-// generate guide holes
-// get bounding box using meshlab 
-// click bounding box filters> quality measures and computations > compute geometric measures
-//Mesh Bounding Box min -320.829620 782.151062 0.544556
-//Mesh Bounding Box max -259.819153 839.827271 122.641846
-//Mesh Bounding Box Size 61.010468 57.676208 122.097290
-//Center of Mass is -290.220123 809.829041 55.147953
-//uniform mesh resampling .5 and 55 CLOSE VERTICES OPTION
-//remove duplicated vertex remove duplicate faces merge close vertices 10% remove non manifold edges and vertices close holes clustering decimation LAPLACIAN SMOOTH
-//export uncheck material and binary encoding options
-//fix in inspector in mesh mixer and make solid
-// mesh mixer generate solid 1.1 1.4 > fix 
-module model(fn,vert,bbox_min,bbox_max,size,dowel_thickness){
+//Slice 3D model by material thickness into x y z planes for 2d construction
+//By Chris Correll 22_8_7
+
+
+module model(){
     
-    idx_x = vert == true ? 0 : 2;
-    idx_y = vert == true ? 1 : 0;
-    idx_z = vert == true ? 2 : 1;
-    
+    idx = slice_vect[slice_idx];
+    rotate_vect = [ [0,90,0], [90,180,90], [0,0,0] ];
+    translate_vect = [ [-size[1],0,0], [-size[0],-size[1],0],[0,0,0] ];
     difference(){
-    if(vert != true){
-        rotate([90,180,90])
-        translate([-1*bbox_min[0],-1*bbox_max[1],-bbox_min[2]])
-            import(fn, convexity=3); 
-    }
-    else{
-        translate([-1*bbox_min[0],-1*bbox_max[1],-bbox_min[2]])
-            import(fn, convexity=3); 
-    }
-    
-    translate([size[idx_x]/10,-1*size[idx_y]/2,0])  
-        cylinder(h=size[idx_z]*2, r=dowel_thickness, center=true);
-    translate([size[idx_x]/3,-1*size[idx_y]/2,0])  
-        cylinder(h=size[idx_z]*2, r=dowel_thickness, center=true);
-    translate([size[idx_x]/2,-1*size[idx_y]/2,0])  
-        cylinder(h=size[idx_z]*2, r=dowel_thickness, center=true);
-    translate([2*size[idx_x]/3,-1*size[idx_y]/2,0])  
-        cylinder(h=size[idx_z]*2, r=dowel_thickness, center=true);
-    translate([9*size[idx_x]/10,-1*size[idx_y]/2,0])  
-        cylinder(h=size[idx_z]*2, r=dowel_thickness, center=true);
+
+        rotate(rotate_vect[slice_idx]){ 
+        //get the model to 0,0,0 first
+        translate([-bbox_min[0],-bbox_min[1],-bbox_min[2]])
+            translate(translate_vect[slice_idx])
+                import(fn, convexity=3); 
+        }
+
+        //dowel holes
+        dowel_y = size[idx[1]]/2;
+        dowel_x = size[idx[0]];
+        dowel_z= size[idx[2]];
+        translate([1/10*dowel_x, dowel_y, 0])  
+           cylinder(h=dowel_z*2, r=dowel_thickness, center=true);
+        translate([1/3 * dowel_x,dowel_y,0])  
+            cylinder(h=dowel_z*2, r=dowel_thickness, center=true);
+        translate([1/2*dowel_x,dowel_y,0])  
+            cylinder(h=dowel_z*2, r=dowel_thickness, center=true);
+        translate([2/3*dowel_x,dowel_y,0])  
+            cylinder(h=dowel_z*2, r=dowel_thickness, center=true);
+        translate([9/10*dowel_x,dowel_y,0])  
+            cylinder(h=dowel_z*2, r=dowel_thickness, center=true);
     }
 }
 
@@ -45,22 +37,25 @@ module model(fn,vert,bbox_min,bbox_max,size,dowel_thickness){
 dowel_thickness = 1.25; // dowels to aid construction
 material_thickness = 3.175; // 1/8"
 slice = material_thickness;
-fn ="/A_mesh_solid_fix.stl";
-vert = false;
+fn ="../A_mesh_solid_fix.stl";
+slice_idx = 1; // 0 x slice, 1 y slice, 2 z slice
 bbox_min = [-320.829620, 782.151062, 0.544556];
 bbox_max = [-259.819153, 839.827271, 122.641846];
 size = [bbox_max[0]-bbox_min[0], bbox_max[1]-bbox_min[1], bbox_max[2]-bbox_min[2]];
-//model(fn,vert,bbox_min,bbox_max,size);
 
 
 //DO THE SLICING
+
+
+slice_vect = [ [2,1,0], [2,0,1], [0,1,2] ];
+
+x_max = size[slice_vect[slice_idx][0]];
+y_max = size[slice_vect[slice_idx][1]];
+z_max = size[slice_vect[slice_idx][2]];
 z_min = 0;
-x_max = vert == true ? size[0] : size[2];
-y_max = vert == true ? size[1] : size[0];
-z_max = vert == true ? size[2] : size[1];
 
+n = floor(sqrt((z_max - z_min)/slice)+1); //for laying out sheet
 
-n = floor(sqrt((z_max - z_min)/slice)+1);
 for(z = [-z_max:slice:z_min]) { 
     i = (z + z_max) / slice;
     x = x_max * (i % n);
@@ -68,6 +63,6 @@ for(z = [-z_max:slice:z_min]) {
     
     translate([x,y,0]) {
         projection(cut=true) 
-            translate([0,0,z]) model(fn,vert,bbox_min,bbox_max,size);;
+            translate([0,0,z]) model();
     };
 };
