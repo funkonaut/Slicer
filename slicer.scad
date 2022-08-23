@@ -37,16 +37,18 @@ module model(){
 dowel_thickness = 1.25; // dowels to aid construction
 material_thickness = 3.175; // 1/8"
 slice = material_thickness;
-fn ="../A_mesh_solid_fix.stl";
+fn = "./shelf_hanger_pin_v2.stl";
+//fn = "../A_mesh_solid_fix.stl";
 slice_idx = 1; // 0 x slice, 1 y slice, 2 z slice
-bbox_min = [-320.829620, 782.151062, 0.544556];
-bbox_max = [-259.819153, 839.827271, 122.641846];
+//bbox_min = [-320.829620, 782.151062, 0.544556];
+//bbox_max = [-259.819153, 839.827271, 122.641846];
+bbox_min = [-3,-3,-8];
+bbox_max = [3,3,8];
 size = [bbox_max[0]-bbox_min[0], bbox_max[1]-bbox_min[1], bbox_max[2]-bbox_min[2]];
 
 
 //DO THE SLICING
-
-
+model();
 slice_vect = [ [2,1,0], [2,0,1], [0,1,2] ];
 
 x_max = size[slice_vect[slice_idx][0]];
